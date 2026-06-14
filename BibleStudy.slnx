@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BibleStudy.Api/BibleStudy.Api.csproj" />
+    <Project Path="src/BibleStudy.Application/BibleStudy.Application.csproj" />
+    <Project Path="src/BibleStudy.Domain/BibleStudy.Domain.csproj" />
+    <Project Path="src/BibleStudy.Infrastructure/BibleStudy.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BibleStudy.Tests/BibleStudy.Tests.csproj" />
+  </Folder>
+</Solution>
