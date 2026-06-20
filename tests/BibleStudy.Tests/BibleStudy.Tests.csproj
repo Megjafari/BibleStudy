@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BibleStudy.Application\BibleStudy.Application.csproj" />
+    <ProjectReference Include="..\..\src\BibleStudy.Domain\BibleStudy.Domain.csproj" />
   </ItemGroup>
 
 </Project>
