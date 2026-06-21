@@ -3,6 +3,7 @@ using BibleStudy.Application.Services;
 using BibleStudy.Infrastructure.Data;
 using BibleStudy.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using BibleStudy.Infrastructure.Bible;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,8 @@ builder.Services.AddScoped<INoteService, NoteService>();
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+builder.Services.AddHttpClient<IBibleTextProvider, BibleApiTextProvider>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
