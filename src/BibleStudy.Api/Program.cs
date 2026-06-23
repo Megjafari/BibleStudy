@@ -17,6 +17,9 @@ builder.Services.AddScoped<INoteRepository, NoteRepository>();
 // Services
 builder.Services.AddScoped<IPlanService, PlanService>();
 builder.Services.AddScoped<INoteService, NoteService>();
+builder.Services.AddScoped<IReadingRepository, ReadingRepository>();
+builder.Services.AddScoped<IReadingService, ReadingService>();
+
 
 // Add services to the container.
 builder.Services.AddControllers();
