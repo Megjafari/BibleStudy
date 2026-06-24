@@ -2,9 +2,11 @@ using BibleStudy.Application.DTOs;
 using BibleStudy.Application.Exceptions;
 using BibleStudy.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BibleStudy.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class ReadingsController : ControllerBase
