@@ -7,6 +7,8 @@ public class Plan
     public string? Description { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime CreatedAt { get; set; }
+    public int UserId { get; set; }
+    public User User { get; set; } = null!;
 
     public ICollection<Reading> Readings { get; set; } = new List<Reading>();
 }

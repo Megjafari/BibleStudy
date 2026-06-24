@@ -15,4 +15,10 @@ public class PlanRepository : GenericRepository<Plan>, IPlanRepository
         => await Context.Plans
             .Include(p => p.Readings)
             .FirstOrDefaultAsync(p => p.Id == id);
+
+
+    public async Task<IEnumerable<Plan>> GetAllByUserAsync(int userId)
+    => await Context.Plans
+        .Where(p => p.UserId == userId)
+        .ToListAsync();
 }

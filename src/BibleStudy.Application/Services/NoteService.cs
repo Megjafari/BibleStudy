@@ -8,30 +8,29 @@ namespace BibleStudy.Application.Services;
 public class NoteService : INoteService
 {
     private readonly INoteRepository _repository;
+    private readonly ICurrentUser _currentUser;
 
-    public NoteService(INoteRepository repository)
+    public NoteService(INoteRepository repository, ICurrentUser currentUser)
     {
         _repository = repository;
+        _currentUser = currentUser;
     }
 
     public async Task<IEnumerable<NoteDto>> GetAllAsync()
     {
-        var notes = await _repository.GetAllAsync();
+        var notes = await _repository.GetAllByUserAsync(_currentUser.UserId);
         return notes.Select(MapToDto);
     }
 
     public async Task<NoteDto> GetByIdAsync(int id)
     {
-        var note = await _repository.GetByIdAsync(id);
-        if (note is null)
-            throw new NotFoundException($"Note with id {id} was not found.");
-
+        var note = await GetOwnedNoteAsync(id);
         return MapToDto(note);
     }
 
     public async Task<IEnumerable<NoteDto>> GetByPassageAsync(string book, int chapter)
     {
-        var notes = await _repository.GetByPassageAsync(book, chapter);
+        var notes = await _repository.GetByPassageAsync(_currentUser.UserId, book, chapter);
         return notes.Select(MapToDto);
     }
 
@@ -46,7 +45,8 @@ public class NoteService : INoteService
             Chapter = dto.Chapter,
             StartVerse = dto.StartVerse,
             EndVerse = dto.EndVerse,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            UserId = _currentUser.UserId
         };
 
         var created = await _repository.AddAsync(note);
@@ -57,9 +57,7 @@ public class NoteService : INoteService
     {
         Validate(dto.Content, dto.Chapter, dto.StartVerse, dto.EndVerse);
 
-        var note = await _repository.GetByIdAsync(id);
-        if (note is null)
-            throw new NotFoundException($"Note with id {id} was not found.");
+        var note = await GetOwnedNoteAsync(id);
 
         note.Content = dto.Content;
         note.Book = dto.Book;
@@ -72,11 +70,17 @@ public class NoteService : INoteService
 
     public async Task DeleteAsync(int id)
     {
+        var note = await GetOwnedNoteAsync(id);
+        await _repository.DeleteAsync(note);
+    }
+
+    private async Task<Note> GetOwnedNoteAsync(int id)
+    {
         var note = await _repository.GetByIdAsync(id);
-        if (note is null)
+        if (note is null || note.UserId != _currentUser.UserId)
             throw new NotFoundException($"Note with id {id} was not found.");
 
-        await _repository.DeleteAsync(note);
+        return note;
     }
 
     private static void Validate(string content, int chapter, int startVerse, int endVerse)
