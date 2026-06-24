@@ -10,22 +10,26 @@ namespace BibleStudy.Tests;
 public class PlanServiceTests
 {
     private readonly IPlanRepository _repository;
+    private readonly ICurrentUser _currentUser;
     private readonly PlanService _service;
+    private const int TestUserId = 1;
 
     public PlanServiceTests()
     {
-        // Arrange (shared): a mocked repository injected into the service
+        // Arrange (shared): mocked repository and current user
         _repository = Substitute.For<IPlanRepository>();
-        _service = new PlanService(_repository);
+        _currentUser = Substitute.For<ICurrentUser>();
+        _currentUser.UserId.Returns(TestUserId);
+        _service = new PlanService(_repository, _currentUser);
     }
-
-    [Fact]
+[Fact]
     public async Task GetProgressAsync_ReturnsCorrectPercentage_WhenSomeReadingsAreRead()
     {
         // Arrange
         var plan = new Plan
         {
             Id = 1,
+            UserId = TestUserId,
             Readings = new List<Reading>
             {
                 new() { IsRead = true },
@@ -49,7 +53,7 @@ public class PlanServiceTests
     public async Task GetProgressAsync_ReturnsZero_WhenPlanHasNoReadings()
     {
         // Arrange
-        var plan = new Plan { Id = 1, Readings = new List<Reading>() };
+        var plan = new Plan { Id = 1, UserId = TestUserId, Readings = new List<Reading>() };
         _repository.GetByIdWithReadingsAsync(1).Returns(plan);
 
         // Act
@@ -72,6 +76,18 @@ public class PlanServiceTests
     }
 
     [Fact]
+    public async Task GetByIdAsync_ThrowsNotFound_WhenPlanBelongsToAnotherUser()
+    {
+        // Arrange: a plan owned by a different user
+        var plan = new Plan { Id = 5, UserId = 999 };
+        _repository.GetByIdAsync(5).Returns(plan);
+
+        // Act + Assert: the current user must not see it
+        await Assert.ThrowsAsync<NotFoundException>(
+            () => _service.GetByIdAsync(5));
+    }
+
+    [Fact]
     public async Task CreateAsync_ThrowsArgumentException_WhenTitleIsEmpty()
     {
         // Arrange
@@ -83,7 +99,7 @@ public class PlanServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_SavesPlan_WhenTitleIsValid()
+    public async Task CreateAsync_SetsCurrentUserAsOwner_WhenTitleIsValid()
     {
         // Arrange
         var dto = new CreatePlanDto("The Gospel of John", null, DateTime.UtcNow);
@@ -92,8 +108,8 @@ public class PlanServiceTests
         // Act
         var result = await _service.CreateAsync(dto);
 
-        // Assert
-        Assert.Equal("The Gospel of John", result.Title);
-        await _repository.Received(1).AddAsync(Arg.Any<Plan>());
+        // Assert: the created plan is owned by the current user
+        await _repository.Received(1).AddAsync(
+            Arg.Is<Plan>(p => p.UserId == TestUserId && p.Title == "The Gospel of John"));
     }
-}
+} 

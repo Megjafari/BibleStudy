@@ -10,13 +10,17 @@ namespace BibleStudy.Tests;
 public class NoteServiceTests
 {
     private readonly INoteRepository _repository;
+    private readonly ICurrentUser _currentUser;
     private readonly NoteService _service;
+    private const int TestUserId = 1;
 
     public NoteServiceTests()
     {
-        // Arrange (shared): a mocked repository injected into the service
+        // Arrange (shared): mocked repository and current user
         _repository = Substitute.For<INoteRepository>();
-        _service = new NoteService(_repository);
+        _currentUser = Substitute.For<ICurrentUser>();
+        _currentUser.UserId.Returns(TestUserId);
+        _service = new NoteService(_repository, _currentUser);
     }
 
     [Fact]
@@ -53,7 +57,7 @@ public class NoteServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_SavesNote_WhenInputIsValid()
+    public async Task CreateAsync_SetsCurrentUserAsOwner_WhenInputIsValid()
     {
         // Arrange
         var dto = new CreateNoteDto("For God so loved the world", "John", 3, 16, 16);
@@ -62,10 +66,9 @@ public class NoteServiceTests
         // Act
         var result = await _service.CreateAsync(dto);
 
-        // Assert
-        Assert.Equal("John", result.Book);
-        Assert.Equal(16, result.StartVerse);
-        await _repository.Received(1).AddAsync(Arg.Any<Note>());
+        // Assert: the created note is owned by the current user
+        await _repository.Received(1).AddAsync(
+            Arg.Is<Note>(n => n.UserId == TestUserId && n.Book == "John"));
     }
 
     [Fact]
@@ -77,5 +80,17 @@ public class NoteServiceTests
         // Act + Assert
         await Assert.ThrowsAsync<NotFoundException>(
             () => _service.GetByIdAsync(99));
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ThrowsNotFound_WhenNoteBelongsToAnotherUser()
+    {
+        // Arrange: a note owned by a different user
+        var note = new Note { Id = 7, UserId = 999, Content = "Someone else's note" };
+        _repository.GetByIdAsync(7).Returns(note);
+
+        // Act + Assert: the current user must not see it
+        await Assert.ThrowsAsync<NotFoundException>(
+            () => _service.GetByIdAsync(7));
     }
 }
