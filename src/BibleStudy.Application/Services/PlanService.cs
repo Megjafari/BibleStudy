@@ -37,7 +37,7 @@ public class PlanService : IPlanService
         {
             Title = dto.Title,
             Description = dto.Description,
-            StartDate = dto.StartDate,
+            StartDate = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc),
             CreatedAt = DateTime.UtcNow,
             UserId = _currentUser.UserId
         };
@@ -55,7 +55,7 @@ public class PlanService : IPlanService
 
         plan.Title = dto.Title;
         plan.Description = dto.Description;
-        plan.StartDate = dto.StartDate;
+        plan.StartDate = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc);
 
         await _repository.UpdateAsync(plan);
     }
