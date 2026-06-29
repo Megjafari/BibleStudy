@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<Note> Notes => Set<Note>();
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Highlight> Highlights => Set<Highlight>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,12 @@ public class AppDbContext : DbContext
             .HasMany(u => u.Notes)
             .WithOne(n => n.User)
             .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<User>()
+            .HasMany(u => u.Highlights)
+            .WithOne(h => h.User)
+            .HasForeignKey(h => h.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<User>()

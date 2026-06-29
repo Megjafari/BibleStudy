@@ -11,4 +11,5 @@ public class User
     public ICollection<Plan> Plans { get; set; } = new List<Plan>();
     public ICollection<Note> Notes { get; set; } = new List<Note>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<Highlight> Highlights { get; set; } = new List<Highlight>();
 }
