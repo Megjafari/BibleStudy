@@ -30,11 +30,13 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 // Repositories
 builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 builder.Services.AddScoped<INoteRepository, NoteRepository>();
+builder.Services.AddScoped<IHighlightRepository, HighlightRepository>();
 builder.Services.AddScoped<IReadingRepository, ReadingRepository>();
 
 // Services
 builder.Services.AddScoped<IPlanService, PlanService>();
 builder.Services.AddScoped<INoteService, NoteService>();
+builder.Services.AddScoped<IHighlightService, HighlightService>();
 builder.Services.AddScoped<IReadingService, ReadingService>();
 
 // Add services to the container.
