@@ -5,4 +5,6 @@ namespace BibleStudy.Application.Interfaces;
 public interface IBibleTextProvider
 {
     Task<BibleChapterDto> GetChapterAsync(string book, int chapter, string translation);
+    Task<IEnumerable<BibleBookDto>> GetBooksAsync(string translation);
+    Task<IEnumerable<int>> GetChaptersAsync(string book, string translation);
 }
