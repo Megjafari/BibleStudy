@@ -41,6 +41,74 @@ public class BibleApiTextProvider : IBibleTextProvider
         return ParseChapter(json, book, chapter, translation);
     }
 
+    public async Task<IEnumerable<BibleBookDto>> GetBooksAsync(string translation)
+    {
+        if (!Translations.TryGetValue(translation, out var bibleId))
+            throw new ArgumentException($"Unknown translation '{translation}'.");
+
+        var response = await _httpClient.GetAsync($"v1/bibles/{bibleId}/books");
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException(
+                $"Failed to fetch books ({translation}): {response.StatusCode}");
+
+        var json = await response.Content.ReadAsStringAsync();
+        return ParseBooks(json);
+    }
+
+    public async Task<IEnumerable<int>> GetChaptersAsync(string book, string translation)
+    {
+        if (!Translations.TryGetValue(translation, out var bibleId))
+            throw new ArgumentException($"Unknown translation '{translation}'.");
+
+        var response = await _httpClient.GetAsync($"v1/bibles/{bibleId}/books/{book}/chapters");
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException(
+                $"Failed to fetch chapters for {book} ({translation}): {response.StatusCode}");
+
+        var json = await response.Content.ReadAsStringAsync();
+        return ParseChapters(json);
+    }
+
+    private static IEnumerable<BibleBookDto> ParseBooks(string json)
+    {
+        using var doc = JsonDocument.Parse(json);
+        var data = doc.RootElement.GetProperty("data");
+
+        var books = new List<BibleBookDto>();
+        var reachedNewTestament = false;
+
+        foreach (var item in data.EnumerateArray())
+        {
+            var id = item.GetProperty("id").GetString()!;
+            var name = item.GetProperty("name").GetString() ?? id;
+
+            // Everything from Matthew onward is the New Testament.
+            if (id == "MAT")
+                reachedNewTestament = true;
+
+            books.Add(new BibleBookDto(id, name, reachedNewTestament ? "NT" : "OT"));
+        }
+
+        return books;
+    }
+
+    private static IEnumerable<int> ParseChapters(string json)
+    {
+        using var doc = JsonDocument.Parse(json);
+        var data = doc.RootElement.GetProperty("data");
+
+        var chapters = new List<int>();
+        foreach (var item in data.EnumerateArray())
+        {
+            var number = item.GetProperty("number").GetString();
+            // API.Bible includes an "intro" chapter; skip non-numeric.
+            if (int.TryParse(number, out var n))
+                chapters.Add(n);
+        }
+
+        return chapters;
+    }
+
     private static BibleChapterDto ParseChapter(string json, string book, int chapter, string translation)
 {   
     using var doc = JsonDocument.Parse(json);
